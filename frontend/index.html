@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riskora AI — AI-Powered Return & RTO Risk Intelligence</title>
+  
+  <!-- Modern Typography: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fef2f2',
+              100: '#fee2e2',
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c',
+              dark: '#0f172a',
+              sidebar: '#0b1329',
+              canvas: '#f8fafc'
+            },
+            risk: {
+              low: '#10b981',
+              medium: '#f59e0b',
+              high: '#ef4444'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col font-sans selection:bg-red-500 selection:text-white antialiased">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Global Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+    <div class="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-8">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchPage('overview')">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-900 to-slate-800 flex items-center justify-center text-white shadow-md shadow-slate-900/20">
+            <!-- Shield + AI Risk Icon -->
+            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4m0 4h.01" class="text-white"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-heading font-extrabold text-lg tracking-tight text-slate-900">Riskora <span class="text-red-600">AI</span></span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">v2.0</span>
+            </div>
+            <p class="text-[11px] text-slate-600 hidden sm:block">AI-Powered Return & RTO Risk Intelligence</p>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Tabs -->
+        <nav class="hidden lg:flex items-center space-x-1">
+          <button id="nav-overview" onclick="switchPage('overview')" class="nav-item active px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-900 bg-slate-100">
+            Overview
+          </button>
+          <button id="nav-scoring" onclick="switchPage('scoring')" class="nav-item px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            Live Scoring
+          </button>
+          <button id="nav-analytics" onclick="switchPage('analytics')" class="nav-item px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            Analytics
+          </button>
+          <button id="nav-threshold" onclick="switchPage('threshold')" class="nav-item px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            Threshold Studio
+          </button>
+          <button id="nav-audit" onclick="switchPage('audit')" class="nav-item px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            Audit Logs
+          </button>
+          <button id="nav-settings" onclick="switchPage('settings')" class="nav-item px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+            Settings
+          </button>
+        </nav>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center space-x-3">
+        <!-- New Analysis Button -->
+        <button onclick="switchPage('scoring')" class="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>+ New Analysis</span>
+        </button>
+
+        <!-- System Status Pill -->
+        <div class="hidden md:flex items-center space-x-2 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-slate-600 font-medium">Model:</span>
+          <span class="font-mono text-slate-700 font-semibold text-[11px]">XGBoost Calibrated</span>
+          <span class="text-slate-300">|</span>
+          <span id="header-t-star" class="font-mono font-bold text-red-600">T* = 0.32</span>
+        </div>
+
+        <!-- Profile Avatar Placeholder -->
+        <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold font-heading border border-slate-200">
+          RA
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Mobile Navigation Scrollable Subbar -->
+    <div class="lg:hidden flex items-center space-x-1 px-4 py-2 border-t border-slate-100 overflow-x-auto">
+      <button onclick="switchPage('overview')" class="mob-nav-item active text-xs font-medium px-3 py-1 rounded-md whitespace-nowrap bg-slate-100 text-slate-900">Overview</button>
+      <button onclick="switchPage('scoring')" class="mob-nav-item text-xs font-medium px-3 py-1 rounded-md whitespace-nowrap text-slate-600">Live Scoring</button>
+      <button onclick="switchPage('analytics')" class="mob-nav-item text-xs font-medium px-3 py-1 rounded-md whitespace-nowrap text-slate-600">Analytics</button>
+      <button onclick="switchPage('threshold')" class="mob-nav-item text-xs font-medium px-3 py-1 rounded-md whitespace-nowrap text-slate-600">Threshold Studio</button>
+      <button onclick="switchPage('audit')" class="mob-nav-item text-xs font-medium px-3 py-1 rounded-md whitespace-nowrap text-slate-600">Audit Logs</button>
+      <button onclick="switchPage('settings')" class="mob-nav-item text-xs font-medium px-3 py-1 rounded-md whitespace-nowrap text-slate-600">Settings</button>
+    </div>
+  </header>
+
+  <!-- Main Canvas Container -->
+  <main class="flex-1 max-w-[1520px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 1: OVERVIEW (Main Command Center) -->
+    <!-- ========================================================================= -->
+    <section id="page-overview" class="page-section space-y-6">
+      
+      <!-- Greeting Banner -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="font-heading font-extrabold text-2xl text-slate-900">Good morning,</h1>
+          <p class="text-xs sm:text-sm text-slate-600 mt-0.5">Here's what's happening with your return-risk engine today.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-xs text-slate-600 font-medium">Dataset split:</span>
+          <span class="text-xs font-mono font-medium px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">70% Train • 15% Val • 15% Test</span>
+        </div>
+      </div>
+
+      <!-- 4 KPI Cards Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- KPI 1: Orders Scored -->
+        <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-600">
+            <span class="text-xs font-medium">Orders Scored</span>
+            <span class="p-1.5 rounded-lg bg-slate-50 text-slate-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </span>
+          </div>
+          <div class="my-2">
+            <span id="kpi-orders-count" class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900">0</span>
+          </div>
+          <div class="text-[11px] text-slate-600 flex items-center justify-between">
+            <span>Live audit database records</span>
+            <span class="font-mono text-emerald-600 font-semibold">Active</span>
+          </div>
+        </div>
+
+        <!-- KPI 2: High-Risk Orders -->
+        <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-600">
+            <span class="text-xs font-medium">High-Risk Orders</span>
+            <span class="p-1.5 rounded-lg bg-red-50 text-red-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </span>
+          </div>
+          <div class="my-2">
+            <span id="kpi-high-risk-count" class="font-heading font-extrabold text-2xl sm:text-3xl text-red-600">0</span>
+          </div>
+          <div class="text-[11px] text-slate-600 flex items-center justify-between">
+            <span>Exceeding cutoff T*</span>
+            <span class="font-mono text-red-600 font-semibold">COD Blocked</span>
+          </div>
+        </div>
+
+        <!-- KPI 3: Estimated RTOs Prevented -->
+        <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-600">
+            <span class="text-xs font-medium">Estimated RTOs Prevented</span>
+            <span class="p-1.5 rounded-lg bg-sky-50 text-sky-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </span>
+          </div>
+          <div class="my-2">
+            <span id="kpi-rtos-prevented" class="font-heading font-extrabold text-2xl sm:text-3xl text-sky-600">0</span>
+          </div>
+          <div class="text-[11px] text-slate-600 flex items-center justify-between">
+            <span>High risk + UPI nudges</span>
+            <span class="font-mono text-sky-600 font-semibold">Protected</span>
+          </div>
+        </div>
+
+        <!-- KPI 4: Estimated Savings -->
+        <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-600">
+            <span class="text-xs font-medium">Estimated Savings</span>
+            <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </span>
+          </div>
+          <div class="my-2">
+            <span id="kpi-savings-amount" class="font-heading font-extrabold text-2xl sm:text-3xl text-emerald-600">₹0.00</span>
+          </div>
+          <div class="text-[11px] text-slate-600 flex items-center justify-between">
+            <span>Formula: C_fn × p avoided</span>
+            <span class="font-mono text-emerald-600 font-semibold">+Margin</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Main Dashboard Grid (3-Column Layout) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Column 1: Recent Risk Checks (5 Cols) -->
+        <div class="lg:col-span-5 card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="font-heading font-bold text-slate-900 text-sm">Recent Risk Checks</h2>
+              <p class="text-[11px] text-slate-600">Latest checkout scoring events from audit log</p>
+            </div>
+            <button onclick="switchPage('audit')" class="text-xs font-semibold text-red-600 hover:text-red-700 transition-colors">
+              See All &rarr;
+            </button>
+          </div>
+
+          <!-- Recent Checks Table / List -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-600 bg-slate-50 font-medium text-[11px]">
+                <tr>
+                  <th class="py-2 px-2.5 rounded-l">Order ID</th>
+                  <th class="py-2 px-2">Amount</th>
+                  <th class="py-2 px-2">Payment</th>
+                  <th class="py-2 px-2">Risk</th>
+                  <th class="py-2 px-2.5 rounded-r text-right">Tier</th>
+                </tr>
+              </thead>
+              <tbody id="overview-recent-tbody" class="divide-y divide-slate-100 font-sans">
+                <tr>
+                  <td colspan="5" class="py-6 text-center text-slate-600 text-xs">
+                    No orders scored yet. Try running an analysis in Live Scoring!
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Column 2: Risk Distribution (4 Cols) -->
+        <div class="lg:col-span-4 card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div class="pb-3 border-b border-slate-100">
+            <h2 class="font-heading font-bold text-slate-900 text-sm">Risk Distribution</h2>
+            <p class="text-[11px] text-slate-600">Proportion of orders across risk classifications</p>
+          </div>
+
+          <div class="flex flex-col items-center justify-center h-48 relative">
+            <canvas id="overviewDonutChart" class="max-h-44"></canvas>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center text-xs">
+            <div class="p-2 rounded-lg bg-emerald-50/70 border border-emerald-100">
+              <span class="text-[10px] text-emerald-700 font-semibold block">LOW</span>
+              <span id="dist-low-val" class="font-heading font-bold text-slate-900 text-sm">--</span>
+            </div>
+            <div class="p-2 rounded-lg bg-amber-50/70 border border-amber-100">
+              <span class="text-[10px] text-amber-700 font-semibold block">MEDIUM</span>
+              <span id="dist-med-val" class="font-heading font-bold text-slate-900 text-sm">--</span>
+            </div>
+            <div class="p-2 rounded-lg bg-red-50/70 border border-red-100">
+              <span class="text-[10px] text-red-700 font-semibold block">HIGH</span>
+              <span id="dist-high-val" class="font-heading font-bold text-slate-900 text-sm">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Risk Engine Status (3 Cols) -->
+        <div class="lg:col-span-3 card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div class="pb-3 border-b border-slate-100">
+            <h2 class="font-heading font-bold text-slate-900 text-sm">Risk Engine Status</h2>
+            <p class="text-[11px] text-slate-600">Model & infrastructure health</p>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Model</span>
+              <span class="font-semibold text-slate-900 flex items-center space-x-1">
+                <span>XGBoost</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Calibration</span>
+              <span class="font-semibold text-slate-900">Isotonic (CV)</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Explainability</span>
+              <span class="font-semibold text-slate-900">SHAP Attributions</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">API Status</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">HEALTHY</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Database</span>
+              <span class="font-semibold text-slate-800">Connected</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5">
+              <span class="text-slate-600">Injected Noise</span>
+              <span class="font-mono text-slate-700 font-bold">10% Bayes Error</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Second Row: AI Assistant & Risk Activity -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- AI Risk Assistant Card (Dark Feature Card - 6 Cols) -->
+        <div class="lg:col-span-6 rounded-xl bg-slate-900 text-white p-6 shadow-md space-y-4 relative overflow-hidden">
+          <div class="relative z-10 space-y-2">
+            <div class="flex items-center space-x-2">
+              <span class="p-1 rounded bg-red-600 text-white text-xs font-bold">AI</span>
+              <h2 class="font-heading font-bold text-lg text-white">Riskora AI Assistant</h2>
+            </div>
+            <p class="text-xs text-slate-400">Understand your orders, risk trends, and merchant exposure.</p>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex flex-wrap gap-2 relative z-10 text-xs">
+            <button onclick="askAIAssistant('Explain today\'s risk')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors">
+              Explain today's risk
+            </button>
+            <button onclick="askAIAssistant('Summarize risk exposure')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors">
+              Summarize risk exposure
+            </button>
+            <button onclick="switchPage('scoring')" class="px-3 py-1.5 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition-colors">
+              + Score new order
+            </button>
+          </div>
+
+          <!-- Integration-Ready Input -->
+          <div class="pt-2 relative z-10">
+            <div class="flex items-center bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2">
+              <input type="text" id="ai-query-input" placeholder="Ask Riskora AI about order patterns or margin impact..." class="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none">
+              <button onclick="handleAISubmit()" class="ml-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                Ask
+              </button>
+            </div>
+            <div id="ai-response-box" class="mt-3 p-3 rounded-lg bg-slate-800/80 border border-slate-700 text-xs text-slate-300 hidden leading-relaxed"></div>
+          </div>
+        </div>
+
+        <!-- Activity Timeline Card (6 Cols) -->
+        <div class="lg:col-span-6 card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 class="font-heading font-bold text-slate-900 text-sm">Recent Risk Activity</h2>
+              <p class="text-[11px] text-slate-600">Intervention decisions and gating updates</p>
+            </div>
+            <span class="text-[11px] font-mono text-slate-600">Real-Time Stream</span>
+          </div>
+
+          <div id="activity-timeline" class="space-y-3 text-xs">
+            <div class="flex items-start space-x-3 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
+              <div class="flex-1">
+                <p class="text-slate-800 font-medium">Riskora engine initialized with locked validation threshold T* = 0.32.</p>
+                <span class="text-[10px] text-slate-600 block mt-0.5">System Ready</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 2: LIVE SCORING (Flagship Demo Page) -->
+    <!-- ========================================================================= -->
+    <section id="page-scoring" class="page-section hidden space-y-6">
+      
+      <!-- Demo Presets Ribbon -->
+      <div class="card p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Demo Scenarios:</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="loadPreset('high_risk')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-all flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-600"></span>
+            <span>Preset A: Serial Returner (High COD Risk)</span>
+          </button>
+          <button onclick="loadPreset('medium_risk')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span>Preset B: Impulse Buyer (Medium Risk)</span>
+          </button>
+          <button onclick="loadPreset('low_risk')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+            <span>Preset C: Prime VIP (Low Prepaid Risk)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Split Layout: Order Input on Left (6 Cols), Risk Decision & SHAP on Right (6 Cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT: Merchant Checkout Input Form (6 Cols) -->
+        <div class="lg:col-span-6 card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="font-heading font-bold text-slate-900 text-base">Order Checkout Form</h2>
+              <p class="text-xs text-slate-600">Simulate order creation features evaluated at checkout</p>
+            </div>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">ORD_789412</span>
+          </div>
+
+          <form id="scoring-form" onsubmit="event.preventDefault(); triggerLiveScoring();" class="space-y-4">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Customer ID -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Customer ID</label>
+                <input type="text" id="live-customer-id" value="CUST_008412" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500">
+              </div>
+              <!-- Product Category -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Product Category</label>
+                <select id="live-category" onchange="triggerLiveScoring()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none">
+                  <option value="Apparel" selected>Apparel (High Sizing Variance)</option>
+                  <option value="Footwear">Footwear (Fit Propensity)</option>
+                  <option value="Electronics">Electronics (Low Return Rate)</option>
+                  <option value="Beauty_PersonalCare">Beauty & Personal Care</option>
+                  <option value="Home_Kitchen">Home & Kitchen</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <!-- Order Amount -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Amount (₹)</label>
+                <input type="number" id="live-amount" value="2499" min="100" max="50000" oninput="triggerLiveScoring()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none">
+              </div>
+              <!-- Discount % -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Discount (%)</label>
+                <input type="number" id="live-discount" value="45" min="0" max="70" oninput="triggerLiveScoring()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none">
+              </div>
+              <!-- Item Quantity -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Quantity</label>
+                <input type="number" id="live-quantity" value="2" min="1" max="10" oninput="triggerLiveScoring()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Destination Pincode Tier -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Delivery Zone / Pincode</label>
+                <select id="live-pincode" onchange="triggerLiveScoring()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none">
+                  <option value="Tier1_Metro">Tier 1 Metro (Mumbai, Bangalore, Delhi)</option>
+                  <option value="Tier2_Urban">Tier 2 Urban (Pune, Jaipur, Kochi)</option>
+                  <option value="Tier3_SemiUrban">Tier 3 Semi-Urban</option>
+                  <option value="Remote" selected>Remote / High-RTO Transit Zone</option>
+                </select>
+              </div>
+              <!-- Customer Past Return History -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Customer Historical Return Rate</label>
+                <select id="live-past-return" onchange="triggerLiveScoring()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-red-500 focus:outline-none">
+                  <option value="0.0">0% (Never returned an order)</option>
+                  <option value="0.2">20% (Baseline average shopper)</option>
+                  <option value="0.5">50% (Frequent returner)</option>
+                  <option value="0.8" selected>80% (Serial returner / High refusal)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Payment Method Radios with dynamic visual state -->
+            <div class="pt-3 border-t border-slate-100">
+              <label class="block text-xs font-semibold text-slate-700 mb-2">Selected Payment Method</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
+                <!-- COD Box -->
+                <label id="live-cod-box" class="payment-box p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-900">Cash on Delivery</span>
+                    <input type="radio" name="live_payment_method" value="COD" checked onchange="triggerLiveScoring()" class="text-red-600 focus:ring-red-500">
+                  </div>
+                  <span id="live-cod-subtext" class="text-[11px] text-slate-600 mt-1">Pay at doorstep</span>
+                  <div id="live-cod-badge" class="mt-2 hidden"></div>
+                </label>
+
+                <!-- UPI Box -->
+                <label id="live-upi-box" class="payment-box p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-900">Instant UPI</span>
+                    <input type="radio" name="live_payment_method" value="UPI" onchange="triggerLiveScoring()" class="text-red-600 focus:ring-red-500">
+                  </div>
+                  <span class="text-[11px] text-slate-600 mt-1">GPay, PhonePe, Paytm</span>
+                  <div id="live-upi-badge" class="mt-2 hidden py-0.5 px-1.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 text-center animate-pulse">
+                    ✨ ₹50 Instant Discount
+                  </div>
+                </label>
+
+                <!-- Cards Box -->
+                <label id="live-card-box" class="payment-box p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer transition-all flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-900">Cards / NetBanking</span>
+                    <input type="radio" name="live_payment_method" value="CreditCard" onchange="triggerLiveScoring()" class="text-red-600 focus:ring-red-500">
+                  </div>
+                  <span class="text-[11px] text-slate-600 mt-1">Visa, Mastercard, RuPay</span>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Analyze Risk Button -->
+            <button type="submit" class="w-full py-2.5 px-4 rounded-lg bg-slate-900 text-white font-semibold text-xs shadow-sm hover:bg-slate-800 transition-all flex items-center justify-center space-x-2">
+              <span id="live-spinner" class="hidden">
+                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              </span>
+              <span>Analyze Risk</span>
+            </button>
+
+          </form>
+        </div>
+
+        <!-- RIGHT: AI Risk Decision & SHAP Drivers (6 Cols) -->
+        <div class="lg:col-span-6 space-y-6">
+
+          <!-- Decision Output Card -->
+          <div class="card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-600">AI Risk Decision</span>
+              <span id="live-tier-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-800 border border-red-200">
+                HIGH RISK
+              </span>
+            </div>
+
+            <!-- Risk Score Gauge & Summary -->
+            <div class="flex items-center space-x-6">
+              <div class="relative w-24 h-24 flex items-center justify-center shrink-0">
+                <svg class="w-24 h-24 transform -rotate-90">
+                  <circle cx="48" cy="48" r="38" stroke="currentColor" stroke-width="8" class="text-slate-100" fill="transparent" />
+                  <circle id="live-score-circle" cx="48" cy="48" r="38" stroke="currentColor" stroke-width="8" class="text-red-500 transition-all duration-700" fill="transparent" stroke-dasharray="238.76" stroke-dashoffset="60" stroke-linecap="round" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span id="live-score-val" class="font-heading font-extrabold text-2xl text-slate-900">74.8%</span>
+                  <span class="text-[9px] uppercase font-semibold tracking-wider text-slate-600">Return Prob</span>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <span class="text-[11px] text-slate-600 uppercase font-semibold">Recommended Action</span>
+                <div id="live-action-title" class="font-heading font-bold text-base text-red-600">
+                  BLOCK_COD_REQUIRE_PREPAID
+                </div>
+                <p id="live-action-reason" class="text-xs text-slate-600 leading-relaxed">
+                  High return probability. COD disabled to protect logistics cost.
+                </p>
+              </div>
+            </div>
+
+            <!-- Payment Gating Matrix UI -->
+            <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+              <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Payment Method Availability</span>
+              <div class="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+                <div id="gate-cod" class="p-2 rounded bg-red-100 text-red-800 border border-red-200">
+                  COD: <span class="font-bold">Disabled</span>
+                </div>
+                <div id="gate-upi" class="p-2 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  UPI: <span class="font-bold">Recommended</span>
+                </div>
+                <div id="gate-card" class="p-2 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                  Cards: <span class="font-bold">Available</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Potential Savings Box -->
+            <div class="p-3.5 rounded-lg bg-emerald-50/70 border border-emerald-200 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-emerald-900 block">Estimated Loss Avoided</span>
+                <span class="text-[11px] text-emerald-700 font-mono">Formula: C_fn (₹350) × p</span>
+              </div>
+              <span id="live-savings-val" class="font-mono font-extrabold text-lg text-emerald-700">+₹261.80</span>
+            </div>
+
+          </div>
+
+          <!-- SHAP Explanation Panel -->
+          <div class="card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 class="font-heading font-bold text-slate-900 text-sm">Why this order is risky (SHAP Drivers)</h3>
+              <span class="text-[11px] text-slate-600 font-mono">Top 3 Attributions</span>
+            </div>
+            
+            <div id="live-drivers-container" class="space-y-2.5">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 3: ANALYTICS (ML Model Performance & Evaluation) -->
+    <!-- ========================================================================= -->
+    <section id="page-analytics" class="page-section hidden space-y-6">
+      
+      <!-- Analytics Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-2">
+        <div>
+          <h1 class="font-heading font-extrabold text-2xl text-slate-900">Model Performance & Evaluation</h1>
+          <p class="text-xs sm:text-sm text-slate-600">Empirical metrics evaluated strictly once on the held-out test split (9,000 orders).</p>
+        </div>
+        <span class="text-xs font-mono font-bold px-3 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">Test Split: 15% (Untouched)</span>
+      </div>
+
+      <!-- 5 Metric Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="card p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs text-slate-600 block">Precision @ T*</span>
+          <span id="an-precision" class="font-heading font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+          <span class="text-[10px] text-slate-600">True RTOs / Flagged Orders</span>
+        </div>
+        <div class="card p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs text-slate-600 block">Recall @ T*</span>
+          <span id="an-recall" class="font-heading font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+          <span class="text-[10px] text-slate-600">RTOs Caught / Total Returns</span>
+        </div>
+        <div class="card p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs text-slate-600 block">F1 Score</span>
+          <span id="an-f1" class="font-heading font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+          <span class="text-[10px] text-slate-600">Harmonic Mean</span>
+        </div>
+        <div class="card p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs text-slate-600 block">PR-AUC</span>
+          <span id="an-prauc" class="font-heading font-extrabold text-xl text-red-600 mt-1 block">--</span>
+          <span class="text-[10px] text-slate-600">Precision-Recall Area</span>
+        </div>
+        <div class="card p-4 rounded-xl bg-white border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
+          <span class="text-xs text-slate-600 block">ROC-AUC</span>
+          <span id="an-rocauc" class="font-heading font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+          <span class="text-[10px] text-slate-600">Ranking Discriminability</span>
+        </div>
+      </div>
+
+      <!-- Comparison Table & Confusion Matrix Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Model Comparison Table (7 Cols) -->
+        <div class="lg:col-span-7 card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3">
+          <h2 class="font-heading font-bold text-slate-900 text-sm">Model Comparison: Calibrated XGBoost vs Logistic Baseline</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-600 bg-slate-50 font-medium text-[11px]">
+                <tr>
+                  <th class="py-2.5 px-3">Metric</th>
+                  <th class="py-2.5 px-3">Baseline (Logistic)</th>
+                  <th class="py-2.5 px-3 text-red-600 font-bold">Calibrated XGBoost</th>
+                  <th class="py-2.5 px-3 text-emerald-600 font-bold">Lift (Δ)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-mono">
+                <tr>
+                  <td class="py-2.5 px-3 font-sans text-slate-900">PR-AUC</td>
+                  <td class="py-2.5 px-3 text-slate-600" id="an-comp-pr-lr">--</td>
+                  <td class="py-2.5 px-3 text-red-600 font-bold" id="an-comp-pr-xgb">--</td>
+                  <td class="py-2.5 px-3 text-emerald-600 font-bold" id="an-comp-pr-lift">--</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-sans text-slate-900">ROC-AUC</td>
+                  <td class="py-2.5 px-3 text-slate-600" id="an-comp-roc-lr">--</td>
+                  <td class="py-2.5 px-3 text-red-600 font-bold" id="an-comp-roc-xgb">--</td>
+                  <td class="py-2.5 px-3 text-emerald-600 font-bold" id="an-comp-roc-lift">--</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-sans text-slate-900">Precision @ T*</td>
+                  <td class="py-2.5 px-3 text-slate-600" id="an-comp-prec-lr">--</td>
+                  <td class="py-2.5 px-3 text-red-600 font-bold" id="an-comp-prec-xgb">--</td>
+                  <td class="py-2.5 px-3 text-emerald-600 font-bold" id="an-comp-prec-lift">--</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-sans text-slate-900">Recall @ T*</td>
+                  <td class="py-2.5 px-3 text-slate-600" id="an-comp-rec-lr">--</td>
+                  <td class="py-2.5 px-3 text-red-600 font-bold" id="an-comp-rec-xgb">--</td>
+                  <td class="py-2.5 px-3 text-emerald-600 font-bold" id="an-comp-rec-lift">--</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-sans text-slate-900">Net Profit Saved (Test)</td>
+                  <td class="py-2.5 px-3 text-slate-600" id="an-comp-profit-lr">--</td>
+                  <td class="py-2.5 px-3 text-red-600 font-bold" id="an-comp-profit-xgb">--</td>
+                  <td class="py-2.5 px-3 text-emerald-600 font-bold" id="an-comp-profit-lift">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Confusion Matrix Grid (5 Cols) -->
+        <div class="lg:col-span-5 card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3">
+          <h2 class="font-heading font-bold text-slate-900 text-sm">Held-Out Test Confusion Matrix (@ T*)</h2>
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200">
+              <span class="text-[10px] text-emerald-800 font-bold uppercase block">True Positives (TP)</span>
+              <span id="an-cm-tp" class="font-mono font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+              <span class="text-[10px] text-slate-600">RTOs Intercepted</span>
+            </div>
+            <div class="p-3.5 rounded-lg bg-amber-50 border border-amber-200">
+              <span class="text-[10px] text-amber-800 font-bold uppercase block">False Positives (FP)</span>
+              <span id="an-cm-fp" class="font-mono font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+              <span class="text-[10px] text-slate-600">Customer Friction</span>
+            </div>
+            <div class="p-3.5 rounded-lg bg-red-50 border border-red-200">
+              <span class="text-[10px] text-red-800 font-bold uppercase block">False Negatives (FN)</span>
+              <span id="an-cm-fn" class="font-mono font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+              <span class="text-[10px] text-slate-600">Missed Returns</span>
+            </div>
+            <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+              <span class="text-[10px] text-slate-700 font-bold uppercase block">True Negatives (TN)</span>
+              <span id="an-cm-tn" class="font-mono font-extrabold text-xl text-slate-900 mt-1 block">--</span>
+              <span class="text-[10px] text-slate-600">Seamless Orders</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Curves Row: PR Curve on Left, ROC Curve on Right -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-slate-900 text-sm">Precision-Recall Curve (Held-Out Test)</h3>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-200">PR-AUC Curve</span>
+          </div>
+          <div class="h-64">
+            <canvas id="anPrCurveChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-slate-900 text-sm">ROC Curve (Held-Out Test)</h3>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">ROC-AUC Curve</span>
+          </div>
+          <div class="h-64">
+            <canvas id="anRocCurveChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 4: THRESHOLD STUDIO (Business Decisioning & ROI) -->
+    <!-- ========================================================================= -->
+    <section id="page-threshold" class="page-section hidden space-y-6">
+      
+      <!-- Studio Header & Optimal T* Callout -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="font-heading font-extrabold text-2xl text-slate-900">Threshold & ROI Studio</h1>
+          <p class="text-xs sm:text-sm text-slate-600">Find the operating cutoff point that minimizes expected net financial loss.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div class="p-2.5 rounded-xl bg-red-50 border border-red-200 text-right">
+            <span class="text-[10px] uppercase font-bold text-red-800 block">Optimal Cutoff (T*)</span>
+            <span id="th-optimal-badge" class="font-mono font-extrabold text-lg text-red-600">T* = 0.32</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Sliders Panel -->
+      <div class="card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h2 class="font-heading font-bold text-slate-900 text-sm">Business Unit Economics & Monthly Volume</h2>
+          <button onclick="resetThresholdSliders()" class="text-xs font-semibold text-slate-600 hover:text-slate-800">
+            Reset Defaults
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Slider 1: C_FN -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-slate-700">Missed Return Cost (C_fn)</span>
+              <span id="th-cfn-val" class="font-mono font-bold text-red-600">₹350</span>
+            </div>
+            <input type="range" id="th-slider-cfn" min="150" max="600" step="10" value="350" oninput="updateStudioSimulation()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-red-600">
+            <p class="text-[11px] text-slate-600">Reverse courier shipping + restocking + damaged inventory</p>
+          </div>
+
+          <!-- Slider 2: C_FP -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-slate-700">Customer Friction Cost (C_fp)</span>
+              <span id="th-cfp-val" class="font-mono font-bold text-amber-600">₹175</span>
+            </div>
+            <input type="range" id="th-slider-cfp" min="20" max="250" step="5" value="175" oninput="updateStudioSimulation()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500">
+            <p class="text-[11px] text-slate-600">Lost margin & churn if a legitimate buyer drops off from blocked COD</p>
+          </div>
+
+          <!-- Slider 3: Volume -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-slate-700">Monthly Merchant Volume</span>
+              <span id="th-vol-val" class="font-mono font-bold text-slate-900">25,000 orders</span>
+            </div>
+            <input type="range" id="th-slider-vol" min="2000" max="100000" step="1000" value="25000" oninput="updateStudioSimulation()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-800">
+            <p class="text-[11px] text-slate-600">Total transaction scale processed across merchant catalog</p>
+          </div>
+        </div>
+
+        <!-- Simulated KPI Output Counters -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200">
+            <span class="text-xs text-emerald-800 font-semibold block">Projected Monthly Savings</span>
+            <span id="th-kpi-savings" class="font-heading font-extrabold text-2xl text-emerald-700 mt-1 block">₹6.32 Lakhs</span>
+            <span class="text-[10px] text-emerald-600 block mt-0.5">Net profit saved after friction</span>
+          </div>
+          <div class="p-4 rounded-xl bg-sky-50/70 border border-sky-200">
+            <span class="text-xs text-sky-800 font-semibold block">RTOs Prevented</span>
+            <span id="th-kpi-rtos" class="font-heading font-extrabold text-2xl text-sky-700 mt-1 block">5,700</span>
+            <span class="text-[10px] text-sky-600 block mt-0.5">Doorstep returns eliminated</span>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-xs text-slate-700 font-semibold block">Legitimate Preserved</span>
+            <span id="th-kpi-preserved" class="font-heading font-extrabold text-2xl text-slate-900 mt-1 block">92.2%</span>
+            <span class="text-[10px] text-slate-600 block mt-0.5">Seamless prepaid/cash checkouts</span>
+          </div>
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200">
+            <span class="text-xs text-amber-800 font-semibold block">ROI Multiplier</span>
+            <span id="th-kpi-roi" class="font-heading font-extrabold text-2xl text-amber-700 mt-1 block">4.1x</span>
+            <span class="text-[10px] text-amber-600 block mt-0.5">Savings vs friction trade-off</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Cost Sweep Validation Curve -->
+      <div class="card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-heading font-bold text-slate-900 text-sm">Validation Threshold Sweep vs Net Profit Saved (INR)</h3>
+            <p class="text-[11px] text-slate-600">Peak of curve identifies operational cutoff threshold T* on validation data</p>
+          </div>
+          <span class="text-xs font-mono font-semibold text-red-600 px-2 py-0.5 bg-red-50 rounded">T* Peak: 0.32</span>
+        </div>
+        <div class="h-72">
+          <canvas id="thCostSweepChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 5: AUDIT LOGS (Real Prediction Log Stream) -->
+    <!-- ========================================================================= -->
+    <section id="page-audit" class="page-section hidden space-y-6">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="font-heading font-extrabold text-2xl text-slate-900">Prediction Audit Log</h1>
+          <p class="text-xs sm:text-sm text-slate-600">Full tamper-evident audit trail of scored checkout transactions.</p>
+        </div>
+        
+        <!-- Filter Bar -->
+        <div class="flex items-center space-x-2">
+          <select id="audit-filter-tier" onchange="filterAuditLogs()" class="bg-white border border-slate-200 text-xs text-slate-800 font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:border-red-500">
+            <option value="ALL">All Risk Tiers</option>
+            <option value="HIGH">High Risk Only</option>
+            <option value="MEDIUM">Medium Risk Only</option>
+            <option value="LOW">Low Risk Only</option>
+          </select>
+          <button onclick="refreshAuditLogs()" class="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Audit Table Card -->
+      <div class="card p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-600 bg-slate-50 font-medium text-[11px]">
+              <tr>
+                <th class="py-2.5 px-3 rounded-l">Timestamp</th>
+                <th class="py-2.5 px-3">Order ID</th>
+                <th class="py-2.5 px-3">Customer ID</th>
+                <th class="py-2.5 px-3">Category</th>
+                <th class="py-2.5 px-3">Amount</th>
+                <th class="py-2.5 px-3">Payment</th>
+                <th class="py-2.5 px-3">Risk Score</th>
+                <th class="py-2.5 px-3">Tier</th>
+                <th class="py-2.5 px-3 rounded-r text-right">Decision Action</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-tbody" class="divide-y divide-slate-100 font-sans">
+              <tr>
+                <td colspan="9" class="py-8 text-center text-slate-600">Loading audit records from database...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 6: SETTINGS & DATASET CARD -->
+    <!-- ========================================================================= -->
+    <section id="page-settings" class="page-section hidden space-y-6">
+      
+      <div>
+        <h1 class="font-heading font-extrabold text-2xl text-slate-900">System Information & Settings</h1>
+        <p class="text-xs sm:text-sm text-slate-600">Model specifications, calibration parameters, and dataset transparency disclosure.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Dataset Card (6 Cols) -->
+        <div class="lg:col-span-6 card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-heading font-bold text-slate-900 text-sm">Dataset Card</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">Transparency</span>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Riskora AI is trained on a controlled sequential e-commerce transaction log designed for reproducible checkout risk benchmarking.
+          </p>
+
+          <div class="space-y-2.5 text-xs">
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Dataset Type</span>
+              <span class="font-semibold text-slate-900">Sequential Transaction Log</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Total Order Rows</span>
+              <span class="font-mono font-semibold text-slate-900">60,000 orders (12k customers)</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Injected Label Noise</span>
+              <span class="font-mono font-bold text-red-600">10% Stochastic Label Inversion</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Split Strategy</span>
+              <span class="font-semibold text-slate-900">Chronological 70% / 15% / 15%</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Leakage Protection</span>
+              <span class="font-semibold text-emerald-600">Expanding Window Shift(1)</span>
+            </div>
+            <div class="flex justify-between py-1.5">
+              <span class="text-slate-600">Ground Truth Label</span>
+              <span class="font-mono text-slate-700 font-medium text-[11px]">is_returned (Binary 0/1)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Model Architecture & Configurations (6 Cols) -->
+        <div class="lg:col-span-6 card p-6 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-heading font-bold text-slate-900 text-sm">Model & Architecture Specs</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Production Ready</span>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Primary Classifier</span>
+              <span class="font-semibold text-slate-900">XGBoost (180 trees, depth 5)</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Probability Calibration</span>
+              <span class="font-semibold text-slate-900">CalibratedClassifierCV (Isotonic)</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Explainability Mechanism</span>
+              <span class="font-semibold text-slate-900">SHAP Attributions & Feature Weights</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">RTO Cost (C_fn)</span>
+              <span class="font-mono font-semibold text-slate-900">₹350.00</span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-50">
+              <span class="text-slate-600">Friction Cost (C_fp)</span>
+              <span class="font-mono font-semibold text-slate-900">₹175.00</span>
+            </div>
+            <div class="flex justify-between py-1.5">
+              <span class="text-slate-600">Audit Database</span>
+              <span class="font-mono text-slate-900">SQLite (returns_audit.db)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal / Drawer for Order Detail Inspection in Audit Log -->
+  <div id="audit-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="card bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="font-heading font-bold text-slate-900 text-base">Order Scoring Inspection</h3>
+        <button onclick="closeAuditModal()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div id="modal-content" class="space-y-3 text-xs">
+        <!-- Dynamically filled -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-200 py-4 bg-white text-center text-xs text-slate-600">
+    Riskora AI • AI-Powered Return & RTO Risk Intelligence • PREDICT → EXPLAIN → DECIDE → PREVENT → MEASURE
+  </footer>
+
+  <!-- Frontend Logic Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>

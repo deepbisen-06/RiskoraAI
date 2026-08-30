@@ -1,0 +1,54 @@
+{
+  "dataset_name": "E-Commerce Returns & RTO Benchmark (Temporal Log)",
+  "total_orders": 200,
+  "unique_customers": 50,
+  "date_range": {
+    "start": "2025-01-04 22:56:16",
+    "end": "2025-12-28 12:49:30"
+  },
+  "return_rate": 0.34,
+  "injected_label_noise_rate": 0.1,
+  "temporal_split_ratios": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "features": {
+    "categorical": [
+      "product_category",
+      "payment_method",
+      "pincode_tier",
+      "shipping_speed",
+      "device_type"
+    ],
+    "numerical": [
+      "order_amount",
+      "discount_percentage",
+      "item_quantity"
+    ],
+    "temporal_aggregates": [
+      "user_past_orders_count",
+      "user_past_return_rate",
+      "pincode_historical_rto_rate"
+    ],
+    "derived": [
+      "discount_depth_amount",
+      "price_per_item",
+      "is_first_time_buyer_cod"
+    ]
+  },
+  "category_distribution": {
+    "Apparel": 0.405,
+    "Footwear": 0.225,
+    "Electronics": 0.145,
+    "Beauty_PersonalCare": 0.13,
+    "Home_Kitchen": 0.095
+  },
+  "payment_distribution": {
+    "COD": 0.445,
+    "UPI": 0.315,
+    "CreditCard": 0.125,
+    "DebitCard": 0.095,
+    "NetBanking": 0.02
+  }
+}
